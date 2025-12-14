@@ -6,7 +6,149 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hra na Silvestra</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
+    <script defer>
+const tasks = [
+    "Karaoke dle výběru ostatních hráčů",
+    "Napij se",
+    "Nemusíš pít",
+    "Zazpívej národní hymnu",
+    "Zatanči 30 sekund",
+    "Vymysli vtip",
+    "Řekni kompliment hráči vlevo",
+    "Vymysli rým na jméno hráče vpravo",
+    "Všichni kromě tebe pijí",
+    "Můžeš si vybrat, kdo pije",
+    "Předveď zvíře dle výběru ostatních hráčů",
+    "Zahraj scénku dle výběru ostatních hráčů",
+    "Zazpívej refrén oblíbené písničky",
+    "Předveď slavnou osobnost dle výběru ostatních hráčů",
+    "Vymysli krátkou básničku na téma zadané ostatními hráči",
+];
+const colors = [
+    '#f44336','#e91e63','#9c27b0','#3f51b5','#2196f3','#009688','#4caf50','#ffeb3b','#ff9800','#795548','#607d8b','#00bcd4'
+];
+const wheel = document.getElementById('wheel');
+const ctx = wheel.getContext('2d');
+const spinBtn = document.getElementById('spin');
+const result = document.getElementById('result');
+let angle = 0;
+let spinning = false;
+
+function drawWheel() {
+    const num = tasks.length;
+    const arc = 2 * Math.PI / num;
+    ctx.clearRect(0, 0, wheel.width, wheel.height);
+    for (let i = 0; i < num; i++) {
+        ctx.beginPath();
+        ctx.moveTo(wheel.width/2, wheel.height/2);
+        ctx.arc(wheel.width/2, wheel.height/2, wheel.width/2 - 5, arc * i, arc * (i + 1));
+        ctx.closePath();
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        ctx.save();
+        ctx.translate(wheel.width/2, wheel.height/2);
+        ctx.rotate(arc * (i + 0.5));
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#fff";
+        ctx.font = wheel.width > 300 ? "bold 16px Arial" : "bold 10px Arial";
+        ctx.fillText(tasks[i], wheel.width/2 - 15, 8);
+        ctx.restore();
+    }
+}
+
+function spinWheel() {
+    if (spinning) return;
+    spinning = true;
+    result.textContent = '';
+    let spinAngle = Math.random() * 360 + 1080; // 3+ otáčky
+    let start = null;
+    function animate(ts) {
+        if (!start) start = ts;
+        let progress = ts - start;
+        let current = Math.min(progress / 2000, 1);
+        let ease = 1 - Math.pow(1 - current, 3);
+        angle = (spinAngle * ease) % 360;
+        wheel.style.transform = `rotate(${angle}deg)`;
+        if (current < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            spinning = false;
+            showResult();
+        }
+    }
+    requestAnimationFrame(animate);
+}
+
+function showResult() {
+    const num = tasks.length;
+    const arc = 360 / num;
+    let selected = Math.floor(((360 - angle + arc/2) % 360) / arc);
+    result.textContent = tasks[selected];
+}
+
+drawWheel();
+spinBtn.onclick = spinWheel;
+
+window.addEventListener('resize', drawWheel);
+
+// Přidání úkolu z inputu
+const taskInput = document.getElementById('taskInput');
+const addTaskBtn = document.getElementById('addTask');
+if (taskInput && addTaskBtn) {
+    addTaskBtn.onclick = function() {
+        const value = taskInput.value.trim();
+        if (value.length > 0) {
+            tasks.push(value);
+            taskInput.value = '';
+            drawWheel();
+            renderTaskList();
+        }
+    };
+
+    taskInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            addTaskBtn.click();
+        }
+    });
+}
+
+// Zobrazování a mazání úkolů
+const taskList = document.getElementById('taskList');
+function renderTaskList() {
+    if (!taskList) return;
+    taskList.innerHTML = '';
+    tasks.forEach((task, idx) => {
+        const li = document.createElement('li');
+        li.style.display = 'flex';
+        li.style.justifyContent = 'space-between';
+        li.style.alignItems = 'center';
+        li.style.padding = '4px 0';
+        const span = document.createElement('span');
+        span.textContent = task;
+        span.style.flex = '1';
+        const btn = document.createElement('button');
+        btn.textContent = '✖';
+        btn.title = 'Odstranit úkol';
+        btn.style.background = '#f44336';
+        btn.style.color = '#fff';
+        btn.style.border = 'none';
+        btn.style.borderRadius = '4px';
+        btn.style.marginLeft = '8px';
+        btn.style.cursor = 'pointer';
+        btn.onclick = function() {
+            tasks.splice(idx, 1);
+            drawWheel();
+            renderTaskList();
+        };
+        li.appendChild(span);
+        li.appendChild(btn);
+        taskList.appendChild(li);
+    });
+}
+
+// Inicializace seznamu úkolů
+renderTaskList();
+    </script>
 </head>
 
 <body>
