@@ -1,21 +1,35 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-	<title>Hra na Silvestra</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="style.css">
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <html>
+
+    <head>
+        <title>Hra na Silvestra</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css">
+    </head>
+
 <body>
-	<div id="wheel-container">
-		<div id="arrow"></div>
-		<canvas id="wheel" width="350" height="350"></canvas>
-	</div>
-	<div style="margin: 20px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 350px;">
-		<input id="taskInput" type="text" placeholder="Přidej vlastní úkol..." style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em;">
-		<button id="addTask" style="padding: 8px 18px; border-radius: 6px; border: none; background: #4caf50; color: #fff; font-size: 1em; cursor: pointer;">Přidat úkol</button>
-	</div>
-	<ul id="taskList" style="list-style:none; padding:0; margin:0 0 20px 0; max-width:350px; width:100%;"></ul>
-	<button id="spin">Roztoč kolo!</button>
-	<div id="result"></div>
-	<script src="script.js"></script>
+    <div id="wheel-container">
+        <div id="arrow"></div>
+        <canvas id="wheel" width="350" height="350"></canvas>
+    </div>
+    <div
+        style="margin: 20px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 350px;">
+        <input id="taskInput" type="text" placeholder="Přidej vlastní úkol..."
+            style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em;">
+        <button id="addTask"
+            style="padding: 8px 18px; border-radius: 6px; border: none; background: #4caf50; color: #fff; font-size: 1em; cursor: pointer;">Přidat
+            úkol</button>
+    </div>
+    <ul id="taskList" style="list-style:none; padding:0; margin:0 0 20px 0; max-width:350px; width:100%;"></ul>
+    <button id="spin">Roztoč kolo!</button>
+    <div id="result"></div>
+    <script src="script.js"></script>
 </body>
+
 </html>
