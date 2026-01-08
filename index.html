@@ -42,11 +42,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const glass = document.getElementById('glass');
     const gctx = glass.getContext('2d');
     const pourBtn = document.getElementById('pour');
+    const diceBtn = document.getElementById('rollDice');
+    const diceValue = document.getElementById('diceValue');
     const taskInput = document.getElementById('taskInput');
     const addTaskBtn = document.getElementById('addTask');
     const taskList = document.getElementById('taskList');
     let fillLevel = 0; // 0-1
     let pouring = false;
+    let maxClicks = 0;
+    let clickCount = 0;
 
     function saveTasks() {
         localStorage.setItem('silvestr_tasks', JSON.stringify(tasks));
@@ -54,50 +58,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function drawGlass() {
         gctx.clearRect(0, 0, glass.width, glass.height);
-        // Sklenička
+        // Sklenička bez ucha
         gctx.save();
         gctx.strokeStyle = '#aaa';
-        gctx.lineWidth = 4;
+        gctx.lineWidth = 5;
         gctx.beginPath();
-        gctx.moveTo(30, 30);
-        gctx.lineTo(30, 180);
-        gctx.quadraticCurveTo(60, 210, 90, 180);
-        gctx.lineTo(90, 30);
+        gctx.moveTo(35, 30); // levý horní roh
+        gctx.lineTo(35, 180); // levá stěna
+        gctx.quadraticCurveTo(75, 220, 115, 180); // dno
+        gctx.lineTo(115, 30); // pravá stěna
+        gctx.closePath();
         gctx.stroke();
         gctx.restore();
         // Tekutina
         if (fillLevel > 0) {
             gctx.save();
             gctx.beginPath();
-            gctx.moveTo(32, 180);
-            gctx.quadraticCurveTo(60, 208, 88, 180);
-            gctx.lineTo(88, 180 - 150 * fillLevel);
-            gctx.quadraticCurveTo(60, 180 - 150 * fillLevel - 28, 32, 180 - 150 * fillLevel);
+            gctx.moveTo(37, 180);
+            gctx.quadraticCurveTo(75, 215, 113, 180);
+            gctx.lineTo(113, 180 - 150 * fillLevel);
+            gctx.lineTo(37, 180 - 150 * fillLevel);
             gctx.closePath();
             gctx.fillStyle = '#ffe066';
             gctx.fill();
             gctx.restore();
         }
+        // Zobrazení hodnoty plnosti
+        gctx.save();
+        gctx.font = 'bold 18px Arial';
+        gctx.fillStyle = '#fff';
+        gctx.textAlign = 'center';
+        gctx.fillText(Math.round(fillLevel * 100) + '%', glass.width / 2, 25);
+        gctx.restore();
     }
 
     function pourGlass() {
-            function showResult() {
-                if (!tasks.length) return;
-                const selected = Math.floor(Math.random() * tasks.length);
-                alert(tasks[selected]);
-                fillLevel = 0;
-                drawGlass();
-            }
         if (pouring) return;
+        if (clickCount >= maxClicks || fillLevel >= 1) return;
         pouring = true;
         let start = null;
         let initial = fillLevel;
-        // Nalije náhodně mezi 0.2 a 0.7
-        let pourAmount = 0.2 + Math.random() * 0.5;
+        // Nalije přesně 1/20 objemu
+        let pourAmount = 1 / 20;
         let target = Math.min(1, fillLevel + pourAmount);
         function animate(ts) {
             if (!start) start = ts;
-            let progress = (ts - start) / 900;
+            let progress = (ts - start) / 500;
             if (progress < 1) {
                 fillLevel = initial + (target - initial) * progress;
                 if (fillLevel > 1) fillLevel = 1;
@@ -107,12 +113,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 fillLevel = target;
                 drawGlass();
                 pouring = false;
+                clickCount++;
                 if (fillLevel >= 1) {
                     setTimeout(showResult, 300);
                 }
             }
         }
         requestAnimationFrame(animate);
+    }
+
+    function showResult() {
+        if (!tasks.length) return;
+        const selected = Math.floor(Math.random() * tasks.length);
+        alert(tasks[selected]);
+        fillLevel = 0;
+        clickCount = 0;
+        maxClicks = 0;
+        drawGlass();
+        pourBtn.disabled = true;
+    }
+
+    function rollDice() {
+        if (fillLevel >= 1) return;
+        const value = Math.floor(Math.random() * 6) + 1;
+        diceValue.textContent = value;
+        maxClicks = Math.min(20 - Math.round(fillLevel * 20), value);
+        clickCount = 0;
+        pourBtn.disabled = false;
     }
 
     function drawGlass() {
@@ -202,7 +229,9 @@ document.addEventListener('DOMContentLoaded', function() {
     drawGlass();
     renderTaskList();
     pourBtn.onclick = pourGlass;
+    diceBtn.onclick = rollDice;
     window.addEventListener('resize', drawGlass);
+    pourBtn.disabled = true;
 
     if (taskInput && addTaskBtn) {
         addTaskBtn.onclick = function() {
@@ -226,15 +255,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </head>
 
 <body>
-    <div style="display: flex; flex-direction: column; align-items: center; margin-top: 30px;">
-        <canvas id="glass" width="120" height="220" style="background:transparent;"></canvas>
-        <button id="pour" style="margin: 20px 0 0 0;">Nalij do skleničky!</button>
+    <div class="glass-container">
+        <canvas id="glass" width="120" height="220"></canvas>
+        <div class="dice-row">
+            <span id="diceValue" class="dice-value">1</span>
+            <button id="rollDice" class="dice-btn">Hodit kostkou</button>
+        </div>
+        <button id="pour">Nalij do skleničky!</button>
     </div>
-    <div style="margin: 20px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 350px;">
-        <input id="taskInput" type="text" placeholder="Přidej vlastní úkol..." style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em;">
-        <button id="addTask" style="padding: 8px 18px; border-radius: 6px; border: none; background: #4caf50; color: #fff; font-size: 1em; cursor: pointer;">Přidat úkol</button>
+    <div class="task-controls">
+        <input id="taskInput" type="text" placeholder="Přidej vlastní úkol...">
+        <button id="addTask">Přidat úkol</button>
     </div>
-    <ul id="taskList" style="list-style:none; padding:0; margin:0 0 20px 0; max-width:350px; width:100%;"></ul>
+    <ul id="taskList"></ul>
 </body>
 
 </html>
