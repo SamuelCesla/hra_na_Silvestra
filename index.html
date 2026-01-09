@@ -1,273 +1,31 @@
-
 <!DOCTYPE html>
 <html lang="cs">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hra na Silvestra</title>
+    <title>Silvestrovská hra</title>
+
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
-    <script defer>
-document.addEventListener('DOMContentLoaded', function() {
-    // Načtení úkolů z localStorage nebo výchozí
-    let tasks = [];
-    const defaultTasks = [
-        "Karaoke dle výběru ostatních hráčů",
-        "Napij se",
-        "Nemusíš pít",
-        "Zazpívej národní hymnu",
-        "Zatanči 30 sekund",
-        "Vymysli vtip",
-        "Řekni kompliment hráči vlevo",
-        "Vymysli rým na jméno hráče vpravo",
-        "Všichni kromě tebe pijí",
-        "Můžeš si vybrat, kdo pije",
-        "Předveď zvíře dle výběru ostatních hráčů",
-        "Zahraj scénku dle výběru ostatních hráčů",
-        "Zazpívej refrén oblíbené písničky",
-        "Předveď slavnou osobnost dle výběru ostatních hráčů",
-        "Vymysli krátkou básničku na téma zadané ostatními hráči",
-    ];
-    try {
-        const stored = localStorage.getItem('silvestr_tasks');
-        if (stored) {
-            tasks = JSON.parse(stored);
-        } else {
-            tasks = [...defaultTasks];
-        }
-    } catch {
-        tasks = [...defaultTasks];
-    }
-
-    const glass = document.getElementById('glass');
-    const gctx = glass.getContext('2d');
-    const pourBtn = document.getElementById('pour');
-    const diceBtn = document.getElementById('rollDice');
-    const diceValue = document.getElementById('diceValue');
-    const taskInput = document.getElementById('taskInput');
-    const addTaskBtn = document.getElementById('addTask');
-    const taskList = document.getElementById('taskList');
-    let fillLevel = 0; // 0-1
-    let pouring = false;
-    let maxClicks = 0;
-    let clickCount = 0;
-
-    function saveTasks() {
-        localStorage.setItem('silvestr_tasks', JSON.stringify(tasks));
-    }
-
-    function drawGlass() {
-        gctx.clearRect(0, 0, glass.width, glass.height);
-        // Sklenička bez ucha
-        gctx.save();
-        gctx.strokeStyle = '#aaa';
-        gctx.lineWidth = 5;
-        gctx.beginPath();
-        gctx.moveTo(35, 30); // levý horní roh
-        gctx.lineTo(35, 180); // levá stěna
-        gctx.quadraticCurveTo(75, 220, 115, 180); // dno
-        gctx.lineTo(115, 30); // pravá stěna
-        gctx.closePath();
-        gctx.stroke();
-        gctx.restore();
-        // Tekutina
-        if (fillLevel > 0) {
-            gctx.save();
-            gctx.beginPath();
-            gctx.moveTo(37, 180);
-            gctx.quadraticCurveTo(75, 215, 113, 180);
-            gctx.lineTo(113, 180 - 150 * fillLevel);
-            gctx.lineTo(37, 180 - 150 * fillLevel);
-            gctx.closePath();
-            gctx.fillStyle = '#ffe066';
-            gctx.fill();
-            gctx.restore();
-        }
-        // Zobrazení hodnoty plnosti
-        gctx.save();
-        gctx.font = 'bold 18px Arial';
-        gctx.fillStyle = '#fff';
-        gctx.textAlign = 'center';
-        gctx.fillText(Math.round(fillLevel * 100) + '%', glass.width / 2, 25);
-        gctx.restore();
-    }
-
-    function pourGlass() {
-        if (pouring) return;
-        if (clickCount >= maxClicks || fillLevel >= 1) return;
-        pouring = true;
-        let start = null;
-        let initial = fillLevel;
-        // Nalije přesně 1/20 objemu
-        let pourAmount = 1 / 20;
-        let target = Math.min(1, fillLevel + pourAmount);
-        function animate(ts) {
-            if (!start) start = ts;
-            let progress = (ts - start) / 500;
-            if (progress < 1) {
-                fillLevel = initial + (target - initial) * progress;
-                if (fillLevel > 1) fillLevel = 1;
-                drawGlass();
-                requestAnimationFrame(animate);
-            } else {
-                fillLevel = target;
-                drawGlass();
-                pouring = false;
-                clickCount++;
-                if (fillLevel >= 1) {
-                    setTimeout(showResult, 300);
-                }
-            }
-        }
-        requestAnimationFrame(animate);
-    }
-
-    function showResult() {
-        if (!tasks.length) return;
-        const selected = Math.floor(Math.random() * tasks.length);
-        alert(tasks[selected]);
-        fillLevel = 0;
-        clickCount = 0;
-        maxClicks = 0;
-        drawGlass();
-        pourBtn.disabled = true;
-    }
-
-    function rollDice() {
-        if (fillLevel >= 1) return;
-        const value = Math.floor(Math.random() * 6) + 1;
-        diceValue.textContent = value;
-        maxClicks = Math.min(20 - Math.round(fillLevel * 20), value);
-        clickCount = 0;
-        pourBtn.disabled = false;
-    }
-
-    function drawGlass() {
-        gctx.clearRect(0, 0, glass.width, glass.height);
-        // Krígl (půllitr) – symetrický, pravá stěna zarovnaná
-        gctx.save();
-        gctx.strokeStyle = '#aaa';
-        gctx.lineWidth = 5;
-        gctx.beginPath();
-        gctx.moveTo(35, 30); // levý horní roh
-        gctx.lineTo(35, 180); // levá stěna
-        gctx.quadraticCurveTo(75, 220, 115, 180); // dno
-        gctx.lineTo(115, 30); // pravá stěna
-        gctx.closePath();
-        gctx.stroke();
-        gctx.restore();
-        // Ucho kríglu (střed ještě více vpravo, celé venku, dotýká se pravé stěny)
-        gctx.save();
-        // Vnější oblouk ucha
-        gctx.beginPath();
-        gctx.lineWidth = 10;
-        gctx.strokeStyle = '#bbb';
-        gctx.arc(140, 105, 36, Math.PI * 0.7, Math.PI * 2.3, false);
-        gctx.stroke();
-        // Vnitřní oblouk ucha (dutina)
-        gctx.beginPath();
-        gctx.lineWidth = 8;
-        gctx.strokeStyle = '#fff';
-        gctx.arc(140, 105, 26, Math.PI * 0.7, Math.PI * 2.3, false);
-        gctx.stroke();
-        gctx.restore();
-        // Tekutina – kopíruje tvar těla
-        if (fillLevel > 0) {
-            gctx.save();
-            gctx.beginPath();
-            gctx.moveTo(37, 180);
-            gctx.quadraticCurveTo(75, 215, 113, 180);
-            gctx.lineTo(113, 180 - 150 * fillLevel);
-            gctx.lineTo(37, 180 - 150 * fillLevel);
-            gctx.closePath();
-            gctx.fillStyle = '#ffe066';
-            gctx.fill();
-            gctx.restore();
-        }
-        // Zobrazení hodnoty plnosti
-        gctx.save();
-        gctx.font = 'bold 18px Arial';
-        gctx.fillStyle = '#fff';
-        gctx.textAlign = 'center';
-        gctx.fillText(Math.round(fillLevel * 100) + '%', glass.width / 2, 25);
-        gctx.restore();
-    }
-
-    function renderTaskList() {
-        if (!taskList) return;
-        taskList.innerHTML = '';
-        tasks.forEach((task, idx) => {
-            const li = document.createElement('li');
-            li.style.display = 'flex';
-            li.style.justifyContent = 'space-between';
-            li.style.alignItems = 'center';
-            li.style.padding = '4px 0';
-            const span = document.createElement('span');
-            span.textContent = task;
-            span.style.flex = '1';
-            const btn = document.createElement('button');
-            btn.textContent = '✖';
-            btn.title = 'Odstranit úkol';
-            btn.style.background = '#f44336';
-            btn.style.color = '#fff';
-            btn.style.border = 'none';
-            btn.style.borderRadius = '4px';
-            btn.style.marginLeft = '8px';
-            btn.style.cursor = 'pointer';
-            btn.onclick = function() {
-                tasks.splice(idx, 1);
-                saveTasks();
-                drawGlass();
-                renderTaskList();
-            };
-            li.appendChild(span);
-            li.appendChild(btn);
-            taskList.appendChild(li);
-        });
-    }
-
-    drawGlass();
-    renderTaskList();
-    pourBtn.onclick = pourGlass;
-    diceBtn.onclick = rollDice;
-    window.addEventListener('resize', drawGlass);
-    pourBtn.disabled = true;
-
-    if (taskInput && addTaskBtn) {
-        addTaskBtn.onclick = function() {
-            const value = taskInput.value.trim();
-            if (value.length > 0) {
-                tasks.push(value);
-                saveTasks();
-                taskInput.value = '';
-                drawGlass();
-                renderTaskList();
-            }
-        };
-        taskInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                addTaskBtn.click();
-            }
-        });
-    }
-});
-    </script>
 </head>
 
 <body>
-    <div class="glass-container">
-        <canvas id="glass" width="120" height="220"></canvas>
-        <div class="dice-row">
-            <span id="diceValue" class="dice-value">1</span>
-            <button id="rollDice" class="dice-btn">Hodit kostkou</button>
-        </div>
-        <button id="pour">Nalij do skleničky!</button>
-    </div>
-    <div class="task-controls">
-        <input id="taskInput" type="text" placeholder="Přidej vlastní úkol...">
-        <button id="addTask">Přidat úkol</button>
-    </div>
-    <ul id="taskList"></ul>
-</body>
 
+<h1>🍻 Silvestrovská hra</h1>
+
+<div class="glass-container">
+    <canvas id="glass" width="160" height="260"></canvas>
+    <button id="pour">Nalij do skleničky!</button>
+</div>
+
+<div class="task-controls">
+    <input id="taskInput" type="text" placeholder="Přidej vlastní úkol...">
+    <button id="addTask">Přidat úkol</button>
+</div>
+
+<ul id="taskList"></ul>
+
+<!-- JS -->
+<script src="script.js"></script>
+</body>
 </html>
